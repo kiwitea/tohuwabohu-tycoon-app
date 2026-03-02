@@ -3,14 +3,55 @@
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  
+  --color-storm-50: #f4f5f7;
+  --color-storm-100: #e9eaee;
+  --color-storm-200: #c8ced6;
+  --color-storm-300: #a7b1be;
+  --color-storm-400: #66788d;
+  --color-storm-500: #253e5c;
+  --color-storm-600: #213853;
+  --color-storm-700: #1c2f45;
+  --color-storm-800: #162537;
+  --color-storm-900: #121f2d;
 }
 
-:root {
-  --background: #F5F5F0;
-  --foreground: #1C1917;
+@layer base {
+  :root {
+    --background: #f8fafc;
+    --foreground: #1e293b;
+  }
+
+  .dark {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Stormy animations */
+@keyframes drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2px, -2px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  75% { transform: translate(-2px, -1px) rotate(0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.animate-drift {
+  animation: drift 5s ease-in-out infinite;
+}
+
+@keyframes swirl {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-swirl {
+  animation: swirl 20s linear infinite;
 }

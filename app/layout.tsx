@@ -13,14 +13,16 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Buchstabier-Biene',
-  description: 'Ein tägliches deutsches Buchstabierspiel.',
+  title: 'Tohuwabohu Tycoon',
+  description: 'Bändige das Buchstaben-Chaos!',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="de" className={`${inter.variable} ${playfair.variable}`}>
-      <body suppressHydrationWarning className="antialiased">{children}</body>
+      <body suppressHydrationWarning className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+        {children}
+      </body>
     </html>
   );
 }

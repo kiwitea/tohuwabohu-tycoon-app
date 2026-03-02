@@ -15,7 +15,7 @@ export interface Puzzle {
 export async function generateDailyPuzzle(date: Date): Promise<Puzzle> {
   const dateStr = format(date, "yyyy-MM-dd");
   
-  const prompt = `Generate a German Spelling Bee puzzle for the date ${dateStr}. 
+  const prompt = `Generate a German "Tohuwabohu Tycoon" word puzzle for the date ${dateStr}. 
   Rules:
   1. Provide 7 unique letters. One is the "center" letter (must be used in every word).
   2. Provide a list of valid German words that can be formed using ONLY these 7 letters.
@@ -58,7 +58,12 @@ export async function generateDailyPuzzle(date: Date): Promise<Puzzle> {
     }
   });
 
-  const data = JSON.parse(response.text);
+  const text = response.text;
+  if (!text) {
+    throw new Error("No response text from Gemini");
+  }
+
+  const data = JSON.parse(text);
   
   // Calculate max points
   // 4-letter words: 1 point

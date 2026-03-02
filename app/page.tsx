@@ -17,17 +17,18 @@ import { format, subDays, startOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Trophy, 
-  Settings, 
-  Info, 
   History, 
   X, 
-  Check, 
   ChevronRight, 
   RotateCcw, 
   Delete,
-  User,
   LogOut,
-  Lock
+  Lock,
+  Wind,
+  CloudLightning,
+  Moon,
+  Sun,
+  Zap
 } from 'lucide-react';
 import { generateDailyPuzzle, Puzzle } from '@/lib/puzzle-service';
 import confetti from 'canvas-confetti';
@@ -58,24 +59,25 @@ const LEVELS = [
   { name: "Meister", minPercent: 55 },
   { name: "Genie", minPercent: 70 },
   { name: "Legende", minPercent: 85 },
-  { name: "Königin", minPercent: 100 },
+  { name: "Tycoon", minPercent: 100 },
 ];
 
-const INVITE_CODE = process.env.NEXT_PUBLIC_INVITE_CODE || "BIENE2024";
+const INVITE_CODE = process.env.NEXT_PUBLIC_INVITE_CODE || "STURM2026";
 
 // --- Components ---
 
-export default function SpellingBee() {
+export default function TohuwabohuTycoon() {
+  const [darkMode, setDarkMode] = useState(false);
   const [user, setUser] = useState<{ id: string; name: string } | null>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('bee_user');
+      const stored = localStorage.getItem('tycoon_user');
       return stored ? JSON.parse(stored) : null;
     }
     return null;
   });
   const [isAuthorized, setIsAuthorized] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('bee_auth') === 'true';
+      return localStorage.getItem('tycoon_auth') === 'true';
     }
     return false;
   });
@@ -95,6 +97,15 @@ export default function SpellingBee() {
   useEffect(() => {
     if (!isFirebaseConfigured) return;
   }, [isFirebaseConfigured]);
+
+  // Dark Mode Effect
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,8 +129,8 @@ export default function SpellingBee() {
     const newUser = { id: Math.random().toString(36).substr(2, 9), name: username };
     setUser(newUser);
     setIsAuthorized(true);
-    localStorage.setItem('bee_user', JSON.stringify(newUser));
-    localStorage.setItem('bee_auth', 'true');
+    localStorage.setItem('tycoon_user', JSON.stringify(newUser));
+    localStorage.setItem('tycoon_auth', 'true');
     setMessage({ text: `Willkommen, ${username}!`, type: 'success' });
   };
 
@@ -292,22 +303,22 @@ export default function SpellingBee() {
 
   if (!isFirebaseConfigured) {
     return (
-      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors duration-300">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-stone-200"
+          className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl max-w-md w-full border border-slate-200 dark:border-slate-800"
         >
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center shadow-inner">
-              <Lock className="text-red-600 w-8 h-8" />
+            <div className="w-16 h-16 bg-storm-500 rounded-2xl flex items-center justify-center shadow-inner animate-drift">
+              <CloudLightning className="text-white w-8 h-8" />
             </div>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-center mb-2 text-stone-800">Setup Erforderlich</h1>
-          <p className="text-stone-500 text-center mb-8 text-sm">
-            Bitte konfiguriere die Firebase-Umgebungsvariablen in den AI Studio Secrets, um das Spiel zu starten.
+          <h1 className="text-3xl font-serif font-bold text-center mb-2 text-slate-800 dark:text-slate-100">Setup Erforderlich</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-center mb-8 text-sm">
+            Bitte konfiguriere die Firebase-Umgebungsvariablen in den AI Studio Secrets, um den Sturm zu bändigen.
           </p>
-          <div className="bg-stone-50 p-4 rounded-xl border border-stone-100 text-xs font-mono text-stone-600 space-y-1">
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-xs font-mono text-slate-600 dark:text-slate-400 space-y-1">
             <p>NEXT_PUBLIC_FIREBASE_API_KEY</p>
             <p>NEXT_PUBLIC_FIREBASE_PROJECT_ID</p>
             <p>...</p>
@@ -319,46 +330,46 @@ export default function SpellingBee() {
 
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors duration-300">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-stone-200"
+          className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl max-w-md w-full border border-slate-200 dark:border-slate-800"
         >
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-inner">
-              <Lock className="text-stone-800 w-8 h-8" />
+            <div className="w-16 h-16 bg-storm-500 rounded-2xl flex items-center justify-center shadow-inner animate-drift">
+              <Wind className="text-white w-8 h-8" />
             </div>
           </div>
-          <h1 className="text-3xl font-serif font-bold text-center mb-2 text-stone-800">Buchstabier-Biene</h1>
-          <p className="text-stone-500 text-center mb-8 text-sm">Bitte gib deinen Namen und den Einladungscode ein, um zu spielen.</p>
+          <h1 className="text-3xl font-serif font-bold text-center mb-2 text-slate-800 dark:text-slate-100">Tohuwabohu Tycoon</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-center mb-8 text-sm">Bändige das Buchstaben-Chaos im Auge des Sturms.</p>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1 ml-1">Dein Name</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 ml-1">Dein Name</label>
               <input 
                 name="username"
                 type="text" 
-                placeholder="z.B. Biene Maja"
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none transition-all"
+                placeholder="z.B. Sturmreiter"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-storm-400 focus:border-transparent outline-none transition-all"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-400 mb-1 ml-1">Einladungscode</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 ml-1">Einladungscode</label>
               <input 
                 name="code"
                 type="password" 
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-storm-400 focus:border-transparent outline-none transition-all"
                 required
               />
             </div>
             <button 
               type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-stone-900 font-bold py-4 rounded-xl shadow-lg shadow-yellow-200 transition-all transform active:scale-95"
+              className="w-full bg-storm-500 hover:bg-storm-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-storm-200 dark:shadow-none transition-all transform active:scale-95"
             >
-              Spiel starten
+              Sturm betreten
             </button>
           </form>
           {message && (
@@ -373,40 +384,43 @@ export default function SpellingBee() {
 
   if (!puzzle) {
     return (
-      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center transition-colors duration-300">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-          <p className="font-serif italic text-stone-500">Die Biene sammelt Buchstaben...</p>
+          <div className="w-12 h-12 border-4 border-storm-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="font-serif italic text-slate-500 dark:text-slate-400">Der Sturm braut sich zusammen...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] text-stone-800 font-sans selection:bg-yellow-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-storm-200 transition-colors duration-300">
       {/* Header */}
       <header className="max-w-2xl mx-auto px-4 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-sm">
-            <span className="text-xl font-bold">B</span>
+          <div className="w-10 h-10 bg-storm-500 rounded-xl flex items-center justify-center shadow-sm animate-drift">
+            <Wind className="text-white w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-serif font-bold leading-none">Buchstabier-Biene</h1>
-            <p className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">{format(new Date(), "d. MMMM yyyy")}</p>
+            <h1 className="text-xl font-serif font-bold leading-none">Tohuwabohu Tycoon</h1>
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">{format(new Date(), "d. MMMM yyyy")}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowHistory(true)} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
-            <History className="w-5 h-5 text-stone-600" />
+        <div className="flex gap-1">
+          <button onClick={() => setDarkMode(!darkMode)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+            {darkMode ? <Sun className="w-5 h-5 text-slate-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
           </button>
-          <button onClick={() => setShowLeaderboard(true)} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
-            <Trophy className="w-5 h-5 text-stone-600" />
+          <button onClick={() => setShowHistory(true)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+            <History className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+          </button>
+          <button onClick={() => setShowLeaderboard(true)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+            <Trophy className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
           <button onClick={() => {
-            localStorage.removeItem('bee_auth');
+            localStorage.removeItem('tycoon_auth');
             window.location.reload();
-          }} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
-            <LogOut className="w-5 h-5 text-stone-600" />
+          }} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+            <LogOut className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
       </header>
@@ -416,19 +430,19 @@ export default function SpellingBee() {
         <div className="mb-12">
           <div className="flex justify-between items-end mb-2">
             <span className="text-lg font-serif font-bold">{currentLevel.name}</span>
-            <span className="text-sm font-mono font-bold text-stone-400">{currentPoints} Pkt.</span>
+            <span className="text-sm font-mono font-bold text-slate-400 dark:text-slate-500">{currentPoints} Pkt.</span>
           </div>
-          <div className="h-2 bg-stone-200 rounded-full overflow-hidden flex">
+          <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex">
             {LEVELS.map((l, i) => (
               <div 
                 key={l.name}
-                className={`h-full transition-all duration-500 ${currentPoints >= (l.minPercent / 100) * puzzle.maxPoints ? 'bg-yellow-400' : 'bg-transparent'}`}
+                className={`h-full transition-all duration-500 ${currentPoints >= (l.minPercent / 100) * puzzle.maxPoints ? 'bg-storm-500' : 'bg-transparent'}`}
                 style={{ width: `${100 / LEVELS.length}%`, borderRight: i < LEVELS.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}
               />
             ))}
           </div>
           {nextLevel && (
-            <p className="text-[10px] uppercase tracking-widest text-stone-400 mt-2 text-right">
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-2 text-right">
               Noch {Math.ceil((nextLevel.minPercent / 100) * puzzle.maxPoints - currentPoints)} Pkt. bis {nextLevel.name}
             </p>
           )}
@@ -446,20 +460,20 @@ export default function SpellingBee() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className={`px-4 py-1 rounded-full text-sm font-bold ${
-                    message.type === 'error' ? 'bg-red-100 text-red-600' : 
-                    message.type === 'success' ? 'bg-green-100 text-green-600' : 
-                    'bg-blue-100 text-blue-600'
+                    message.type === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 
+                    message.type === 'success' ? 'bg-storm-100 dark:bg-storm-900/30 text-storm-600 dark:text-storm-400' : 
+                    'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                   }`}
                 >
                   {message.text}
                 </motion.div>
               ) : (
-                <div className="text-4xl font-serif font-bold tracking-widest uppercase flex items-center">
-                  {currentInput || <span className="text-stone-300">...</span>}
+                <div className="text-4xl font-serif font-bold tracking-widest uppercase flex items-center dark:text-slate-100">
+                  {currentInput || <span className="text-slate-300 dark:text-slate-700">...</span>}
                   <motion.div 
                     animate={{ opacity: [1, 0] }}
                     transition={{ repeat: Infinity, duration: 0.8 }}
-                    className="w-1 h-8 bg-yellow-400 ml-1"
+                    className="w-1 h-8 bg-storm-400 ml-1"
                   />
                 </div>
               )}
@@ -467,11 +481,11 @@ export default function SpellingBee() {
           </div>
 
           {/* Hex Grid */}
-          <div className="relative w-64 h-64">
+          <div className="relative w-64 h-64 animate-drift">
             {/* Center Letter */}
             <button 
               onClick={() => setCurrentInput(prev => prev + puzzle.centerLetter)}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-yellow-400 rounded-2xl shadow-lg flex items-center justify-center text-2xl font-bold uppercase hover:scale-105 active:scale-95 transition-transform z-10"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-storm-500 dark:bg-storm-600 rounded-2xl shadow-lg flex items-center justify-center text-2xl font-bold uppercase text-white hover:scale-105 active:scale-95 transition-transform z-10"
             >
               {puzzle.centerLetter}
             </button>
@@ -487,7 +501,7 @@ export default function SpellingBee() {
                 <button
                   key={`${letter}-${i}`}
                   onClick={() => setCurrentInput(prev => prev + letter)}
-                  className="absolute w-16 h-16 bg-white rounded-2xl shadow-md border border-stone-100 flex items-center justify-center text-xl font-bold uppercase hover:bg-stone-50 active:scale-95 transition-all"
+                  className="absolute w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl font-bold uppercase dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
                   style={{
                     top: `calc(50% + ${y}px)`,
                     left: `calc(50% + ${x}px)`,
@@ -504,19 +518,19 @@ export default function SpellingBee() {
           <div className="flex gap-4 w-full max-w-xs">
             <button 
               onClick={() => setCurrentInput(prev => prev.slice(0, -1))}
-              className="flex-1 py-3 bg-white rounded-xl border border-stone-200 text-stone-600 font-bold flex items-center justify-center gap-2 hover:bg-stone-50 active:scale-95 transition-all"
+              className="flex-1 py-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
             >
               <Delete className="w-4 h-4" /> Löschen
             </button>
             <button 
               onClick={shuffleLetters}
-              className="p-3 bg-white rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 active:scale-95 transition-all"
+              className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
             >
               <RotateCcw className="w-5 h-5" />
             </button>
             <button 
               onClick={handleSubmit}
-              className="flex-1 py-3 bg-stone-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-stone-700 active:scale-95 transition-all"
+              className="flex-1 py-3 bg-storm-700 dark:bg-storm-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-storm-800 dark:hover:bg-storm-400 active:scale-95 transition-all"
             >
               Eingabe <ChevronRight className="w-4 h-4" />
             </button>
@@ -526,18 +540,18 @@ export default function SpellingBee() {
         {/* Found Words List */}
         <div className="mt-16">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400">Gefundene Wörter ({foundWords.length})</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Gefundene Wörter ({foundWords.length})</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {foundWords.length === 0 ? (
-              <p className="text-stone-400 italic text-sm">Noch keine Wörter gefunden...</p>
+              <p className="text-slate-400 dark:text-slate-600 italic text-sm">Noch keine Wörter gefunden...</p>
             ) : (
               foundWords.map(word => (
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   key={word} 
-                  className={`px-3 py-1 rounded-lg text-sm font-medium border ${puzzle.pangrams.includes(word) ? 'bg-yellow-50 border-yellow-200 text-yellow-700 font-bold' : 'bg-white border-stone-200 text-stone-600'}`}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium border ${puzzle.pangrams.includes(word) ? 'bg-storm-50 dark:bg-storm-900/30 border-storm-200 dark:border-storm-800 text-storm-700 dark:text-storm-300 font-bold' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'}`}
                 >
                   {word}
                 </motion.div>
@@ -556,41 +570,41 @@ export default function SpellingBee() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowLeaderboard(false)}
-              className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+              className="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
             >
-              <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-                <h2 className="text-xl font-serif font-bold">Rangliste</h2>
-                <button onClick={() => setShowLeaderboard(false)} className="p-2 hover:bg-stone-100 rounded-full">
-                  <X className="w-5 h-5" />
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h2 className="text-xl font-serif font-bold dark:text-slate-100">Rangliste</h2>
+                <button onClick={() => setShowLeaderboard(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                  <X className="w-5 h-5 dark:text-slate-400" />
                 </button>
               </div>
               <div className="p-6 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-4">
                   {leaderboard.map((entry, i) => (
-                    <div key={entry.username} className="flex items-center justify-between p-3 rounded-2xl bg-stone-50 border border-stone-100">
+                    <div key={entry.username} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-4">
-                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${i === 0 ? 'bg-yellow-400 text-stone-900' : 'bg-stone-200 text-stone-500'}`}>
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${i === 0 ? 'bg-storm-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           {i + 1}
                         </span>
                         <div>
-                          <p className="font-bold text-stone-800">{entry.username}</p>
-                          <p className="text-[10px] uppercase tracking-wider text-stone-400">{entry.foundCount} Wörter</p>
+                          <p className="font-bold text-slate-800 dark:text-slate-200">{entry.username}</p>
+                          <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">{entry.foundCount} Wörter</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-mono font-bold text-stone-800">{entry.points}</p>
-                        <p className="text-[10px] uppercase tracking-wider text-stone-400">Punkte</p>
+                        <p className="font-mono font-bold text-slate-800 dark:text-slate-200">{entry.points}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500">Punkte</p>
                       </div>
                     </div>
                   ))}
                   {leaderboard.length === 0 && (
-                    <p className="text-center text-stone-400 py-8 italic">Noch keine Einträge heute.</p>
+                    <p className="text-center text-slate-400 dark:text-slate-600 py-8 italic">Noch keine Einträge heute.</p>
                   )}
                 </div>
               </div>
@@ -608,37 +622,37 @@ export default function SpellingBee() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowHistory(false)}
-              className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+              className="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
             >
-              <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-                <h2 className="text-xl font-serif font-bold">Gestern</h2>
-                <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-stone-100 rounded-full">
-                  <X className="w-5 h-5" />
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h2 className="text-xl font-serif font-bold dark:text-slate-100">Gestern</h2>
+                <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                  <X className="w-5 h-5 dark:text-slate-400" />
                 </button>
               </div>
               <div className="p-6 max-h-[60vh] overflow-y-auto">
                 {yesterdayPuzzle ? (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Buchstaben</h3>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Buchstaben</h3>
                       <div className="flex gap-2">
-                        <span className="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center font-bold uppercase">{yesterdayPuzzle.centerLetter}</span>
+                        <span className="w-10 h-10 bg-storm-500 text-white rounded-lg flex items-center justify-center font-bold uppercase">{yesterdayPuzzle.centerLetter}</span>
                         {yesterdayPuzzle.outerLetters.map(l => (
-                          <span key={l} className="w-10 h-10 bg-stone-100 rounded-lg flex items-center justify-center font-bold uppercase text-stone-500">{l}</span>
+                          <span key={l} className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center font-bold uppercase text-slate-500 dark:text-slate-400">{l}</span>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Alle Wörter ({yesterdayPuzzle.validWords.length})</h3>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Alle Wörter ({yesterdayPuzzle.validWords.length})</h3>
                       <div className="flex flex-wrap gap-2">
                         {yesterdayPuzzle.validWords.sort().map(word => (
-                          <span key={word} className={`px-2 py-1 rounded text-xs ${yesterdayPuzzle.pangrams.includes(word) ? 'bg-yellow-100 text-yellow-700 font-bold' : 'bg-stone-50 text-stone-500'}`}>
+                          <span key={word} className={`px-2 py-1 rounded text-xs ${yesterdayPuzzle.pangrams.includes(word) ? 'bg-storm-100 dark:bg-storm-900/30 text-storm-700 dark:text-storm-300 font-bold' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
                             {word}
                           </span>
                         ))}
@@ -646,7 +660,7 @@ export default function SpellingBee() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-stone-400 py-8 italic">Keine Daten für gestern verfügbar.</p>
+                  <p className="text-center text-slate-400 dark:text-slate-600 py-8 italic">Keine Daten für gestern verfügbar.</p>
                 )}
               </div>
             </motion.div>
