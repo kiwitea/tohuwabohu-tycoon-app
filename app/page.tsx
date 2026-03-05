@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { db, auth } from '@/lib/firebase';
 import { 
   doc, 
@@ -13,7 +13,8 @@ import {
   orderBy, 
   limit 
 } from 'firebase/firestore';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Trophy, 
@@ -67,20 +68,10 @@ const INVITE_CODE = process.env.NEXT_PUBLIC_INVITE_CODE || "STURM2026";
 // --- Components ---
 
 export default function TohuwabohuTycoon() {
+  const [mounted, setMounted] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [user, setUser] = useState<{ id: string; name: string } | null>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('tycoon_user');
-      return stored ? JSON.parse(stored) : null;
-    }
-    return null;
-  });
-  const [isAuthorized, setIsAuthorized] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('tycoon_auth') === 'true';
-    }
-    return false;
-  });
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [yesterdayPuzzle, setYesterdayPuzzle] = useState<Puzzle | null>(null);
   const [foundWords, setFoundWords] = useState<string[]>([]);
@@ -90,13 +81,25 @@ export default function TohuwabohuTycoon() {
   const [showHistory, setShowHistory] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [shuffledLetters, setShuffledLetters] = useState<string[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const isFirebaseConfigured = !!db;
 
-  // 1. Auth & Invite Check - Handled by useState initializers
+  // 1. Hydration & Auth Check
   useEffect(() => {
-    if (!isFirebaseConfigured) return;
-  }, [isFirebaseConfigured]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    const storedUser = localStorage.getItem('tycoon_user');
+    const storedAuth = localStorage.getItem('tycoon_auth');
+    
+    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedAuth === 'true') setIsAuthorized(true);
+    
+    // Check system preference for dark mode
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDarkMode(true);
+    }
+  }, []);
 
   // Dark Mode Effect
   useEffect(() => {
@@ -205,18 +208,26 @@ export default function TohuwabohuTycoon() {
         foundCount: doc.data().foundWords.length
       }));
       setLeaderboard(entries);
+    }, (error) => {
+      console.error("Leaderboard error:", error);
+      if (error.message.includes("requires an index")) {
+        setMessage({ 
+          text: "Leaderboard-Index wird noch erstellt...", 
+          type: 'info' 
+        });
+      }
     });
 
     return () => unsubscribe();
   }, [isAuthorized, puzzle, isFirebaseConfigured]);
 
   // 5. Game Logic
-  const calculatePoints = (word: string) => {
+  const calculatePoints = useCallback((word: string) => {
     if (!puzzle) return 0;
     let pts = word.length === 4 ? 1 : word.length;
     if (puzzle.pangrams.includes(word)) pts += 7;
     return pts;
-  };
+  }, [puzzle]);
 
   const currentPoints = useMemo(() => {
     return foundWords.reduce((sum, word) => {
@@ -238,7 +249,7 @@ export default function TohuwabohuTycoon() {
     return LEVELS[idx + 1] || null;
   }, [currentLevel]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!puzzle || !user) return;
     const word = currentInput.toLowerCase().trim();
     setCurrentInput("");
@@ -287,19 +298,66 @@ export default function TohuwabohuTycoon() {
         lastUpdated: Date.now()
       });
     }
-  };
+  }, [puzzle, user, currentInput, foundWords, isFirebaseConfigured, calculatePoints]);
 
-  const shuffleLetters = () => {
+  const shuffleLetters = useCallback(() => {
     setShuffledLetters([...shuffledLetters].sort(() => Math.random() - 0.5));
-  };
+  }, [shuffledLetters]);
 
-  // 6. Message Auto-clear
+  // 6. Message Auto-clear & Dismiss on Type
   useEffect(() => {
     if (message) {
-      const t = setTimeout(() => setMessage(null), 3000);
+      const t = setTimeout(() => setMessage(null), 5000);
       return () => clearTimeout(t);
     }
   }, [message]);
+
+  useEffect(() => {
+    if (currentInput && message) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMessage(null);
+    }
+  }, [currentInput, message]);
+
+  // 7. Keyboard Support
+  useEffect(() => {
+    if (!isAuthorized || !puzzle || showHistory || showLeaderboard) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input (though we don't have many)
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const key = e.key.toLowerCase();
+
+      // Letters
+      if (/^[a-zäöüß]$/.test(key)) {
+        const allLetters = [puzzle.centerLetter, ...puzzle.outerLetters];
+        if (allLetters.includes(key)) {
+          setCurrentInput(prev => prev + key);
+        }
+      } 
+      // Backspace
+      else if (e.key === 'Backspace') {
+        setCurrentInput(prev => prev.slice(0, -1));
+      }
+      // Enter
+      else if (e.key === 'Enter') {
+        handleSubmit();
+      }
+      // Space (Shuffle)
+      else if (e.key === ' ') {
+        e.preventDefault();
+        shuffleLetters();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthorized, puzzle, showHistory, showLeaderboard, handleSubmit, shuffleLetters]);
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300" />;
+  }
 
   if (!isFirebaseConfigured) {
     return (
@@ -403,7 +461,7 @@ export default function TohuwabohuTycoon() {
           </div>
           <div>
             <h1 className="text-xl font-serif font-bold leading-none">Tohuwabohu Tycoon</h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">{format(new Date(), "d. MMMM yyyy")}</p>
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">{format(new Date(), "d. MMMM yyyy", { locale: de })}</p>
           </div>
         </div>
         <div className="flex gap-1">
@@ -416,18 +474,12 @@ export default function TohuwabohuTycoon() {
           <button onClick={() => setShowLeaderboard(true)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
             <Trophy className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </button>
-          <button onClick={() => {
-            localStorage.removeItem('tycoon_auth');
-            window.location.reload();
-          }} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
-            <LogOut className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-          </button>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pb-24">
         {/* Progress Bar */}
-        <div className="mb-12">
+        <div className="mb-6">
           <div className="flex justify-between items-end mb-2">
             <span className="text-lg font-serif font-bold">{currentLevel.name}</span>
             <span className="text-sm font-mono font-bold text-slate-400 dark:text-slate-500">{currentPoints} Pkt.</span>
@@ -448,8 +500,36 @@ export default function TohuwabohuTycoon() {
           )}
         </div>
 
+        {/* Found Words List (Repositioned & Expandable) */}
+        <div className="mb-12 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 transition-all">
+          <button 
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-between mb-2 group"
+          >
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Gefundene Wörter ({foundWords.length})</h2>
+            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+          </button>
+          
+          <div className={`flex flex-wrap gap-2 overflow-hidden transition-all ${isExpanded ? 'max-h-[300px] overflow-y-auto' : 'max-h-8'}`}>
+            {foundWords.length === 0 ? (
+              <p className="text-slate-400 dark:text-slate-600 italic text-xs">Noch keine Wörter gefunden...</p>
+            ) : (
+              (isExpanded ? [...foundWords].sort() : [...foundWords].reverse()).map(word => (
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  key={word} 
+                  className={`px-2 py-0.5 rounded-lg text-xs font-medium border ${puzzle.pangrams.includes(word) ? 'bg-storm-50 dark:bg-storm-900/30 border-storm-200 dark:border-storm-800 text-storm-700 dark:text-storm-300 font-bold' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'}`}
+                >
+                  {word}
+                </motion.div>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* Game Area */}
-        <div className="flex flex-col items-center gap-8">
+        <div className="flex flex-col items-center gap-6 mt-4">
           {/* Input Display */}
           <div className="h-12 flex items-center justify-center">
             <AnimatePresence mode="wait">
@@ -515,48 +595,28 @@ export default function TohuwabohuTycoon() {
           </div>
 
           {/* Controls */}
-          <div className="flex gap-4 w-full max-w-xs">
+          <div className="flex gap-4 w-full max-w-xs mt-4">
             <button 
               onClick={() => setCurrentInput(prev => prev.slice(0, -1))}
-              className="flex-1 py-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+              className="flex-1 py-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+              title="Löschen"
             >
-              <Delete className="w-4 h-4" /> Löschen
+              <Delete className="w-6 h-6" />
             </button>
             <button 
               onClick={shuffleLetters}
-              className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+              className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+              title="Mischen"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className="w-6 h-6" />
             </button>
             <button 
               onClick={handleSubmit}
-              className="flex-1 py-3 bg-storm-700 dark:bg-storm-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-storm-800 dark:hover:bg-storm-400 active:scale-95 transition-all"
+              className="flex-1 py-4 bg-storm-700 dark:bg-storm-500 text-white rounded-xl font-bold flex items-center justify-center hover:bg-storm-800 dark:hover:bg-storm-400 active:scale-95 transition-all"
+              title="Eingabe"
             >
-              Eingabe <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-6 h-6" />
             </button>
-          </div>
-        </div>
-
-        {/* Found Words List */}
-        <div className="mt-16">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Gefundene Wörter ({foundWords.length})</h2>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {foundWords.length === 0 ? (
-              <p className="text-slate-400 dark:text-slate-600 italic text-sm">Noch keine Wörter gefunden...</p>
-            ) : (
-              foundWords.map(word => (
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  key={word} 
-                  className={`px-3 py-1 rounded-lg text-sm font-medium border ${puzzle.pangrams.includes(word) ? 'bg-storm-50 dark:bg-storm-900/30 border-storm-200 dark:border-storm-800 text-storm-700 dark:text-storm-300 font-bold' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'}`}
-                >
-                  {word}
-                </motion.div>
-              ))
-            )}
           </div>
         </div>
       </main>
